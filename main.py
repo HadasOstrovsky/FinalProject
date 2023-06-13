@@ -38,7 +38,7 @@ def experiment(stimulus_1, stimulus_2, weights):
     first_stage_learning_stimulus_2 = np.dot(stimulus_2, weights_all_zeros)
 
     weights_zeros_for_random_neurons = np.copy(weights)
-    random_neurons_indices = np.where((stimulus_1 != 1) & (stimulus_1 != 0))
+    random_neurons_indices = np.where(stimulus_1 == 0.5)
     weights_zeros_for_random_neurons[random_neurons_indices] = 0
 
     second_stage_learning_stimulus_1 = np.dot(stimulus_1, weights_zeros_for_random_neurons)
@@ -70,24 +70,13 @@ def create_stimulus_with_fixed_neurons():
     return np.copy(stimulus), fixed_indices
 
 
-# def fill_stimulus_with_random_neurons(stimulus):
-#     stimulus_copy = np.copy(stimulus)
-#     num_changes = int(input_neurons_size * random_neurons_percentage)
-#     zero_indices = np.where(stimulus == 0)[0]
-#     random_indices = np.random.choice(zero_indices, size=num_changes, replace=False)
-#     stimulus_copy[random_indices] =np.random.uniform(0.4, 0.8, size=num_changes)
-#     print(stimulus_copy)
-#     return stimulus_copy, random_indices
-
 def fill_stimulus_with_random_neurons(stimulus):
     stimulus_copy = np.copy(stimulus)
     num_changes = int(input_neurons_size * random_neurons_percentage)
     zero_indices = np.where(stimulus == 0)[0]
     random_indices = np.random.choice(zero_indices, size=num_changes, replace=False)
-    stimulus_copy[random_indices] = np.random.uniform(low=0.4, high=0.8, size=num_changes)
-    rounded_stimulus = np.round(stimulus_copy, decimals=1)
-    print(rounded_stimulus)
-    return rounded_stimulus, random_indices
+    stimulus_copy[random_indices] = 0.5
+    return stimulus_copy, random_indices
 
 
 
