@@ -5,10 +5,8 @@ import seaborn as sns
 input_neurons_size = 700
 plot_array_shape = (35, 20)
 
-inhibition_group_size = 180
-
 output_neurons_size = 1
-number_of_experiments = 100
+number_of_experiments = 10
 fixed_neurons_percentage = 0.1
 random_neurons_percentage = 0.15
 
@@ -19,40 +17,21 @@ stimulus_2_random_indices_selected = np.zeros(input_neurons_size, dtype=int)
 stimulus_2_fixed_indices_selected = np.zeros(input_neurons_size, dtype=int)
 
 all_initial_learning_stimulus_1 = []
-all_initial_learning_stimulus_2 = []
 all_second_stage_learning_stimulus_1 = []
 all_second_stage_learning_stimulus_2 = []
 
 
-def calculate_inhibition_effect(stimulus, inhibition_effect, index):
-    connected_neurons_indices = np.random.choice(input_neurons_size, size=inhibition_group_size, replace=False)
-    connected_neurons = stimulus[connected_neurons_indices]
-    effect = np.sum(connected_neurons) / inhibition_group_size
-    inhibition_effect[index] = effect
-
-
-def experiment_with_inhibition(stimulus_1, stimulus_2, weights):
+def experiment(stimulus_1, stimulus_2, weights):
     stimulus_1, stimulus_1_random_indices = fill_stimulus_with_random_neurons(stimulus_1)
     stimulus_1_random_indices_selected[stimulus_1_random_indices] += 1
 
     stimulus_2, stimulus_2_random_indices = fill_stimulus_with_random_neurons(stimulus_2)
     stimulus_2_random_indices_selected[stimulus_2_random_indices] += 1
 
-    inhibition_effect_stimulus_1 = np.zeros(input_neurons_size)
-    inhibition_effect_stimulus_2 = np.zeros(input_neurons_size)
-
-    for i in range(input_neurons_size):
-        calculate_inhibition_effect(stimulus_1, inhibition_effect_stimulus_1, i)
-        calculate_inhibition_effect(stimulus_2, inhibition_effect_stimulus_2, i)
-
-    updated_weights_stimulus1 = weights - inhibition_effect_stimulus_1
-    updated_weights_stimulus2 = weights - inhibition_effect_stimulus_2
-
-    initial_learning_stimulus_1 = np.dot(stimulus_1, updated_weights_stimulus1)
-    initial_learning_stimulus_2 = np.dot(stimulus_2, updated_weights_stimulus2)
+    initial_learning_stimulus_1 = np.dot(stimulus_1, weights)
+    initial_learning_stimulus_2 = np.dot(stimulus_2, weights)
 
     all_initial_learning_stimulus_1.append(initial_learning_stimulus_1)
-    all_initial_learning_stimulus_2.append(initial_learning_stimulus_2)
 
     weights_all_zeros = np.zeros(input_neurons_size)
     first_stage_learning_stimulus_1 = np.dot(stimulus_1, weights_all_zeros)
@@ -64,42 +43,8 @@ def experiment_with_inhibition(stimulus_1, stimulus_2, weights):
     random_neurons_indices_1 = np.where((stimulus_1 != 0) & (stimulus_1 != 1))
     weights[random_neurons_indices_1] = stimulus_1[random_neurons_indices_1]
 
-    updated_weights_stimulus1 = weights - inhibition_effect_stimulus_1
-    updated_weights_stimulus2 = weights - inhibition_effect_stimulus_2
-
-    non_negative_weights_stimulus1 = np.where(updated_weights_stimulus1 < 0, 0, updated_weights_stimulus1)
-    non_negative_weights_stimulus2 = np.where(updated_weights_stimulus2 < 0, 0, updated_weights_stimulus2)
-
-    second_stage_learning_stimulus_1 = np.dot(stimulus_1, non_negative_weights_stimulus1)
-    second_stage_learning_stimulus_2 = np.dot(stimulus_2, non_negative_weights_stimulus2)
-
-    all_second_stage_learning_stimulus_1.append(second_stage_learning_stimulus_1)
-    all_second_stage_learning_stimulus_2.append(second_stage_learning_stimulus_2)
-
-
-def experiment_without_inhibition(stimulus_1, stimulus_2, weights):
-    stimulus_1, stimulus_1_random_indices = fill_stimulus_with_random_neurons(stimulus_1)
-    stimulus_1_random_indices_selected[stimulus_1_random_indices] += 1
-
-    stimulus_2, stimulus_2_random_indices = fill_stimulus_with_random_neurons(stimulus_2)
-    stimulus_2_random_indices_selected[stimulus_2_random_indices] += 1
-
-    initial_learning_stimulus_1 = np.dot(stimulus_1, weights)
-    initial_learning_stimulus_2 = np.dot(stimulus_2, weights)
-
-    all_initial_learning_stimulus_1.append(initial_learning_stimulus_1)
-    all_initial_learning_stimulus_2.append(initial_learning_stimulus_2)
-
-    weights_all_zeros = np.zeros(input_neurons_size)
-    first_stage_learning_stimulus_1 = np.dot(stimulus_1, weights_all_zeros)
-    first_stage_learning_stimulus_2 = np.dot(stimulus_2, weights_all_zeros)
-
-    weights = np.ones(input_neurons_size)
-    fixed_neurons_indices_1 = np.where(stimulus_1 == 1)
-    weights[fixed_neurons_indices_1] = 0.2
-    random_neurons_indices_1 = np.where((stimulus_1 != 0) & (stimulus_1 != 1))
-    weights[random_neurons_indices_1] = np.ones(input_neurons_size)[random_neurons_indices_1] - stimulus_1[
-        random_neurons_indices_1]
+    print("weights_for_random_neurons_1 = " + str(weights))
+    print("weights_for_random_neurons_2 = " + str(weights))
 
     second_stage_learning_stimulus_1 = np.dot(stimulus_1, weights)
     second_stage_learning_stimulus_2 = np.dot(stimulus_2, weights)
@@ -137,7 +82,7 @@ def fill_stimulus_with_random_neurons(stimulus):
     random_indices = np.random.choice(zero_indices, size=num_changes, replace=False)
     stimulus_copy[random_indices] = np.random.uniform(low=0.4, high=0.8, size=num_changes)
     rounded_stimulus = np.round(stimulus_copy, decimals=1)
-    # print(rounded_stimulus)
+    #print(rounded_stimulus)
     return rounded_stimulus, random_indices
 
 
@@ -168,23 +113,11 @@ def plot_xy_chart():
     plt.plot(experiments, all_second_stage_learning_stimulus_1, color='green', label='Weights reset - odor 1')
     plt.plot(experiments, all_second_stage_learning_stimulus_2, color='blue', label='Weights reset - odor 2')
 
-    average_value = np.mean(all_initial_learning_stimulus_1)
-    plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1), color='red', linestyle='--', linewidth=1)
-    plt.yticks(list(plt.yticks()[0]) + [average_value])
-
-    average_value = np.mean(all_second_stage_learning_stimulus_1)
-    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_1), color='green', linestyle='--', linewidth=1)
-    plt.yticks(list(plt.yticks()[0]) + [average_value])
-
-    average_value = np.mean(all_second_stage_learning_stimulus_2)
-    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_2), color='blue', linestyle='--', linewidth=1)
-    plt.yticks(list(plt.yticks()[0]) + [average_value])
-
     plt.xlabel('Experiment Number')
     plt.ylabel('Output')
     plt.title('Experiment Results')
 
-    plt.legend(loc='upper right')
+    plt.legend()
 
     plt.show()
 
@@ -194,13 +127,9 @@ def run_all_experiments():
 
     for i in range(number_of_experiments):
         print("experiment number " + str(i))
-        experiment_with_inhibition(stimulus_1, stimulus_2, weights)
-        # experiment_without_inhibition(stimulus_1, stimulus_2, weights)
+        experiment(stimulus_1, stimulus_2, weights)
         print("------------")
 
-    print(all_initial_learning_stimulus_1)
-    print(all_second_stage_learning_stimulus_1)
-    print(all_second_stage_learning_stimulus_2)
     # plot_heatmap()
     plot_xy_chart()
 
