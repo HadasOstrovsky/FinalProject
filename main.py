@@ -18,8 +18,10 @@ stimulus_1_fixed_indices_selected = np.zeros(input_neurons_size, dtype=int)
 stimulus_2_random_indices_selected = np.zeros(input_neurons_size, dtype=int)
 stimulus_2_fixed_indices_selected = np.zeros(input_neurons_size, dtype=int)
 
-all_initial_learning_stimulus_1 = []
-all_initial_learning_stimulus_2 = []
+all_initial_learning_stimulus_1_with_inhibition = []
+all_initial_learning_stimulus_2_with_inhibition = []
+all_initial_learning_stimulus_1_without_inhibition = []
+all_initial_learning_stimulus_2_without_inhibition = []
 all_second_stage_learning_stimulus_1_with_inhibition = []
 all_second_stage_learning_stimulus_2_with_inhibition = []
 all_second_stage_learning_stimulus_1_without_inhibition = []
@@ -53,8 +55,8 @@ def experiment_with_inhibition(stimulus_1, stimulus_2, weights):
     initial_learning_stimulus_1 = np.dot(stimulus_1, updated_weights_stimulus1)
     initial_learning_stimulus_2 = np.dot(stimulus_2, updated_weights_stimulus2)
 
-    all_initial_learning_stimulus_1.append(initial_learning_stimulus_1)
-    all_initial_learning_stimulus_2.append(initial_learning_stimulus_2)
+    all_initial_learning_stimulus_1_with_inhibition.append(initial_learning_stimulus_1)
+    all_initial_learning_stimulus_2_with_inhibition.append(initial_learning_stimulus_2)
 
     weights_all_zeros = np.zeros(input_neurons_size)
     first_stage_learning_stimulus_1 = np.dot(stimulus_1, weights_all_zeros)
@@ -89,8 +91,8 @@ def experiment_without_inhibition(stimulus_1, stimulus_2, weights):
     initial_learning_stimulus_1 = np.dot(stimulus_1, weights)
     initial_learning_stimulus_2 = np.dot(stimulus_2, weights)
 
-    all_initial_learning_stimulus_1.append(initial_learning_stimulus_1)
-    all_initial_learning_stimulus_2.append(initial_learning_stimulus_2)
+    all_initial_learning_stimulus_1_without_inhibition.append(initial_learning_stimulus_1)
+    all_initial_learning_stimulus_2_without_inhibition.append(initial_learning_stimulus_2)
 
     weights_all_zeros = np.zeros(input_neurons_size)
     first_stage_learning_stimulus_1 = np.dot(stimulus_1, weights_all_zeros)
@@ -166,14 +168,14 @@ def plot_heatmap():
 def plot_xy_chart_with_inhibition():
     experiments = list(range(1, number_of_experiments + 1))
 
-    plt.plot(experiments, all_initial_learning_stimulus_1, color='red', label='Baseline - odor 1 + odor 2')
+    plt.plot(experiments, all_initial_learning_stimulus_1_with_inhibition, color='red', label='Baseline - odor 1 + odor 2')
     plt.plot(experiments, all_second_stage_learning_stimulus_1_with_inhibition, color='green',
              label='Weights reset - odor 1')
     plt.plot(experiments, all_second_stage_learning_stimulus_2_with_inhibition, color='blue',
              label='Weights reset - odor 2')
 
-    average_value_stimulus_1_initial = np.mean(all_initial_learning_stimulus_1)
-    plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1), color='red', linestyle='--', linewidth=1)
+    average_value_stimulus_1_initial = np.mean(all_initial_learning_stimulus_1_with_inhibition)
+    plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1_with_inhibition), color='red', linestyle='--', linewidth=1)
     plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_1_initial])
 
     average_value_stimulus_1_final = np.mean(all_second_stage_learning_stimulus_1_with_inhibition)
@@ -198,14 +200,14 @@ def plot_xy_chart_with_inhibition():
 def plot_xy_chart_without_inhibition():
     experiments = list(range(1, number_of_experiments + 1))
 
-    plt.plot(experiments, all_initial_learning_stimulus_1, color='red', label='Baseline - odor 1 + odor 2')
+    plt.plot(experiments, all_initial_learning_stimulus_1_without_inhibition, color='red', label='Baseline - odor 1 + odor 2')
     plt.plot(experiments, all_second_stage_learning_stimulus_1_without_inhibition, color='green',
              label='Weights reset - odor 1')
     plt.plot(experiments, all_second_stage_learning_stimulus_2_without_inhibition, color='blue',
              label='Weights reset - odor 2')
 
-    average_value_stimulus_1_initial = np.mean(all_initial_learning_stimulus_1)
-    plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1), color='red', linestyle='--', linewidth=1)
+    average_value_stimulus_1_initial = np.mean(all_initial_learning_stimulus_1_without_inhibition)
+    plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1_without_inhibition), color='red', linestyle='--', linewidth=1)
     plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_1_initial])
 
     average_value_stimulus_1_final = np.mean(all_second_stage_learning_stimulus_1_without_inhibition)
@@ -228,16 +230,19 @@ def plot_xy_chart_without_inhibition():
 
 
 def plot_bars_chart():
-    average_all_initial_learning_stimulus_1 = np.mean(all_initial_learning_stimulus_1)
-    average_all_initial_learning_stimulus_2 = np.mean(all_initial_learning_stimulus_2)
+    average_all_initial_learning_stimulus_1_with_inhibition = np.mean(all_initial_learning_stimulus_1_with_inhibition)
+    average_all_initial_learning_stimulus_2_with_inhibition = np.mean(all_initial_learning_stimulus_2_with_inhibition)
+    average_all_initial_learning_stimulus_1_without_inhibition = np.mean(all_initial_learning_stimulus_1_without_inhibition)
+    average_all_initial_learning_stimulus_2_without_inhibition = np.mean(all_initial_learning_stimulus_2_without_inhibition)
 
-    average_value_stimulus_1_inhibition = average_all_initial_learning_stimulus_1 - np.mean(
+
+    average_value_stimulus_1_inhibition = average_all_initial_learning_stimulus_1_with_inhibition - np.mean(
         all_second_stage_learning_stimulus_1_with_inhibition)
-    average_value_stimulus_1_without_inhibition = average_all_initial_learning_stimulus_1 - np.mean(
+    average_value_stimulus_1_without_inhibition = average_all_initial_learning_stimulus_1_without_inhibition - np.mean(
         all_second_stage_learning_stimulus_1_without_inhibition)
-    average_value_stimulus_2_inhibition = average_all_initial_learning_stimulus_2 - np.mean(
+    average_value_stimulus_2_inhibition = average_all_initial_learning_stimulus_2_with_inhibition - np.mean(
         all_second_stage_learning_stimulus_2_with_inhibition)
-    average_value_stimulus_2_without_inhibition = average_all_initial_learning_stimulus_2 - np.mean(
+    average_value_stimulus_2_without_inhibition = average_all_initial_learning_stimulus_2_without_inhibition - np.mean(
         all_second_stage_learning_stimulus_2_without_inhibition)
 
     values = [average_value_stimulus_1_inhibition, average_value_stimulus_1_without_inhibition,
