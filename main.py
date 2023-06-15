@@ -20,8 +20,10 @@ stimulus_2_fixed_indices_selected = np.zeros(input_neurons_size, dtype=int)
 
 all_initial_learning_stimulus_1 = []
 all_initial_learning_stimulus_2 = []
-all_second_stage_learning_stimulus_1 = []
-all_second_stage_learning_stimulus_2 = []
+all_second_stage_learning_stimulus_1_with_inhibition = []
+all_second_stage_learning_stimulus_2_with_inhibition = []
+all_second_stage_learning_stimulus_1_without_inhibition = []
+all_second_stage_learning_stimulus_2_without_inhibition = []
 
 
 def calculate_inhibition_effect(stimulus, inhibition_effect, index):
@@ -73,8 +75,8 @@ def experiment_with_inhibition(stimulus_1, stimulus_2, weights):
     second_stage_learning_stimulus_1 = np.dot(stimulus_1, non_negative_weights_stimulus1)
     second_stage_learning_stimulus_2 = np.dot(stimulus_2, non_negative_weights_stimulus2)
 
-    all_second_stage_learning_stimulus_1.append(second_stage_learning_stimulus_1)
-    all_second_stage_learning_stimulus_2.append(second_stage_learning_stimulus_2)
+    all_second_stage_learning_stimulus_1_with_inhibition.append(second_stage_learning_stimulus_1)
+    all_second_stage_learning_stimulus_2_with_inhibition.append(second_stage_learning_stimulus_2)
 
 
 def experiment_without_inhibition(stimulus_1, stimulus_2, weights):
@@ -104,8 +106,8 @@ def experiment_without_inhibition(stimulus_1, stimulus_2, weights):
     second_stage_learning_stimulus_1 = np.dot(stimulus_1, weights)
     second_stage_learning_stimulus_2 = np.dot(stimulus_2, weights)
 
-    all_second_stage_learning_stimulus_1.append(second_stage_learning_stimulus_1)
-    all_second_stage_learning_stimulus_2.append(second_stage_learning_stimulus_2)
+    all_second_stage_learning_stimulus_1_without_inhibition.append(second_stage_learning_stimulus_1)
+    all_second_stage_learning_stimulus_2_without_inhibition.append(second_stage_learning_stimulus_2)
 
 
 def init_model():
@@ -161,24 +163,28 @@ def plot_heatmap():
     plt.show()
 
 
-def plot_xy_chart():
+def plot_xy_chart_with_inhibition():
     experiments = list(range(1, number_of_experiments + 1))
 
     plt.plot(experiments, all_initial_learning_stimulus_1, color='red', label='Baseline - odor 1 + odor 2')
-    plt.plot(experiments, all_second_stage_learning_stimulus_1, color='green', label='Weights reset - odor 1')
-    plt.plot(experiments, all_second_stage_learning_stimulus_2, color='blue', label='Weights reset - odor 2')
+    plt.plot(experiments, all_second_stage_learning_stimulus_1_with_inhibition, color='green',
+             label='Weights reset - odor 1')
+    plt.plot(experiments, all_second_stage_learning_stimulus_2_with_inhibition, color='blue',
+             label='Weights reset - odor 2')
 
-    average_value = np.mean(all_initial_learning_stimulus_1)
+    average_value_stimulus_1_initial = np.mean(all_initial_learning_stimulus_1)
     plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1), color='red', linestyle='--', linewidth=1)
-    plt.yticks(list(plt.yticks()[0]) + [average_value])
+    plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_1_initial])
 
-    average_value = np.mean(all_second_stage_learning_stimulus_1)
-    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_1), color='green', linestyle='--', linewidth=1)
-    plt.yticks(list(plt.yticks()[0]) + [average_value])
+    average_value_stimulus_1_final = np.mean(all_second_stage_learning_stimulus_1_with_inhibition)
+    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_1_with_inhibition), color='green', linestyle='--',
+                linewidth=1)
+    plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_1_final])
 
-    average_value = np.mean(all_second_stage_learning_stimulus_2)
-    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_2), color='blue', linestyle='--', linewidth=1)
-    plt.yticks(list(plt.yticks()[0]) + [average_value])
+    average_value_stimulus_2_final = np.mean(all_second_stage_learning_stimulus_2_with_inhibition)
+    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_2_with_inhibition), color='blue', linestyle='--',
+                linewidth=1)
+    plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_2_final])
 
     plt.xlabel('Experiment Number')
     plt.ylabel('Output')
@@ -189,20 +195,83 @@ def plot_xy_chart():
     plt.show()
 
 
+def plot_xy_chart_without_inhibition():
+    experiments = list(range(1, number_of_experiments + 1))
+
+    plt.plot(experiments, all_initial_learning_stimulus_1, color='red', label='Baseline - odor 1 + odor 2')
+    plt.plot(experiments, all_second_stage_learning_stimulus_1_without_inhibition, color='green',
+             label='Weights reset - odor 1')
+    plt.plot(experiments, all_second_stage_learning_stimulus_2_without_inhibition, color='blue',
+             label='Weights reset - odor 2')
+
+    average_value_stimulus_1_initial = np.mean(all_initial_learning_stimulus_1)
+    plt.axhline(y=np.nanmean(all_initial_learning_stimulus_1), color='red', linestyle='--', linewidth=1)
+    plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_1_initial])
+
+    average_value_stimulus_1_final = np.mean(all_second_stage_learning_stimulus_1_without_inhibition)
+    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_1_without_inhibition), color='green', linestyle='--',
+                linewidth=1)
+    plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_1_final])
+
+    average_value_stimulus_2_final = np.mean(all_second_stage_learning_stimulus_2_without_inhibition)
+    plt.axhline(y=np.nanmean(all_second_stage_learning_stimulus_2_without_inhibition), color='blue', linestyle='--',
+                linewidth=1)
+    plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_2_final])
+
+    plt.xlabel('Experiment Number')
+    plt.ylabel('Output')
+    plt.title('Experiment Results')
+
+    plt.legend(loc='upper right')
+
+    plt.show()
+
+
+def plot_bars_chart():
+    average_all_initial_learning_stimulus_1 = np.mean(all_initial_learning_stimulus_1)
+    average_all_initial_learning_stimulus_2 = np.mean(all_initial_learning_stimulus_2)
+
+    average_value_stimulus_1_inhibition = average_all_initial_learning_stimulus_1 - np.mean(
+        all_second_stage_learning_stimulus_1_with_inhibition)
+    average_value_stimulus_1_without_inhibition = average_all_initial_learning_stimulus_1 - np.mean(
+        all_second_stage_learning_stimulus_1_without_inhibition)
+    average_value_stimulus_2_inhibition = average_all_initial_learning_stimulus_2 - np.mean(
+        all_second_stage_learning_stimulus_2_with_inhibition)
+    average_value_stimulus_2_without_inhibition = average_all_initial_learning_stimulus_2 - np.mean(
+        all_second_stage_learning_stimulus_2_without_inhibition)
+
+    values = [average_value_stimulus_1_inhibition, average_value_stimulus_1_without_inhibition,
+              average_value_stimulus_2_inhibition, average_value_stimulus_2_without_inhibition]
+    labels = ['stimulus_1_with_inhibition', 'stimulus_1_without_inhibition', 'stimulus_2_with_inhibition',
+              'stimulus_2_without_inhibition']
+    colors = ['blue', 'blue', 'red', 'red']
+
+    plt.bar(labels, values, color=colors)
+
+    plt.xlabel('Categories')
+    plt.ylabel('Values')
+    plt.title('Bar Chart')
+
+    # Show the chart
+    plt.show()
+
+
 def run_all_experiments():
     stimulus_1, stimulus_2, weights = init_model()
 
     for i in range(number_of_experiments):
         print("experiment number " + str(i))
         experiment_with_inhibition(stimulus_1, stimulus_2, weights)
-        # experiment_without_inhibition(stimulus_1, stimulus_2, weights)
+        experiment_without_inhibition(stimulus_1, stimulus_2, weights)
         print("------------")
 
-    print(all_initial_learning_stimulus_1)
-    print(all_second_stage_learning_stimulus_1)
-    print(all_second_stage_learning_stimulus_2)
+    # print(all_initial_learning_stimulus_1)
+    # print(all_second_stage_learning_stimulus_1)
+    # print(all_second_stage_learning_stimulus_2)
     # plot_heatmap()
-    plot_xy_chart()
+    # plot_xy_chart_with_inhibition()
+    # plot_xy_chart_without_inhibition()
+    plot_bars_chart()
 
 
 run_all_experiments()
