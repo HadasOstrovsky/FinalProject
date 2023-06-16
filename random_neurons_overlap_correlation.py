@@ -1,30 +1,40 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 
-input_neurons_size = 700
-number_of_experiments = 10
-fixed_neurons_percentage = 0.1
+input_neurons_size = 2500
+number_of_experiments = 50
+fixed_neurons_percentage = 0.05
 min_random_neurons_percentage = 0
-max_random_neurons_percentage = 90
+max_random_neurons_percentage = 95
 
 overlap_percentages = []
 random_neurons_percentages = []
 
 
 def experiment(stimulus_1, stimulus_2, random_neurons_percentage):
-    stimulus_1 = fill_stimulus_with_random_neurons_new(stimulus_1, random_neurons_percentage)
-    stimulus_2 = fill_stimulus_with_random_neurons_new(stimulus_2, random_neurons_percentage)
+    stimulus_1 = fill_stimulus_with_random_neurons(stimulus_1, random_neurons_percentage)
+    stimulus_2 = fill_stimulus_with_random_neurons(stimulus_2, random_neurons_percentage)
 
-    # stimulus_1 = stimulus_1.reshape(1, -1)  # Convert to row vector
-    # stimulus_2 = stimulus_2.reshape(1, -1)  # Convert to row vector
-    # similarity = cosine_similarity(stimulus_1, stimulus_2)
+    numerator = 0
+    denominator = int(input_neurons_size * random_neurons_percentage)
 
-    correlation_matrix = np.corrcoef(stimulus_1, stimulus_2)
-    correlation = correlation_matrix[0, 1]
+    for i in range(stimulus_1.size):
+        stim_1_val = stimulus_1[i]
+        stim_2_val = stimulus_2[i]
 
-    # return similarity[0,0]
-    return correlation
+        if stim_1_val == 0.5:
+            if stim_2_val == 0.5:
+                numerator += 1
+            elif stim_2_val == 1:
+                numerator += 0.5
+        elif stim_2_val == 1:
+            if stim_1_val == 0.5:
+                numerator += 0.5
+
+    if denominator == 0:
+        return 0
+
+    return numerator / denominator
 
 
 def init_model():
@@ -43,17 +53,6 @@ def create_stimulus_with_fixed_neurons():
     return np.copy(stimulus), fixed_indices
 
 
-def fill_stimulus_with_random_neurons_new(stimulus, random_neurons_percentage):
-    stimulus_copy = np.copy(stimulus)
-    num_changes = int(input_neurons_size * random_neurons_percentage)
-    zero_indices = np.where(stimulus == 0)[0]
-    random_indices = np.random.choice(zero_indices, size=num_changes, replace=False)
-    stimulus_copy[random_indices] = np.random.uniform(low=0.4, high=0.8, size=num_changes)
-    rounded_stimulus = np.round(stimulus_copy, decimals=1)
-    # print(rounded_stimulus)
-    return rounded_stimulus
-
-
 def fill_stimulus_with_random_neurons(stimulus, random_neurons_percentage):
     stimulus_copy = np.copy(stimulus)
     num_changes = int(input_neurons_size * random_neurons_percentage)
@@ -66,16 +65,18 @@ def fill_stimulus_with_random_neurons(stimulus, random_neurons_percentage):
 def plot_chart():
     plt.plot(random_neurons_percentages, overlap_percentages)
     x_interp = np.interp(0.2, overlap_percentages, random_neurons_percentages)
-    plt.plot(x_interp, 0.2, marker='o', markersize=8, color='red')
+    plt.plot(x_interp, 0.2, marker='o', markersize=8, color='orange',)
 
-    plt.annotate(f'({round(x_interp, 2)}, 0.2)',
+    plt.annotate(f'({round(x_interp,2)}, 0.2)',
                  xy=(x_interp, 0.2),
                  xytext=(x_interp, 0.3),
                  arrowprops=dict(facecolor='black', arrowstyle='->'),
-                 horizontalalignment='center')
+                 horizontalalignment='center',
+                 fontsize=14)
 
-    plt.xlabel('random_neurons_percentages')
-    plt.ylabel('cosine_similarity')
+    plt.xlabel('Percentage of Random Neurons', fontsize=18)
+    plt.ylabel('Percentage of Overlap', fontsize=18)
+    plt.title('Percentage of Overlap Between 2 Odors by Percentage of Random Neurons',fontsize=20)
     # plt.grid(True)
     plt.show()
 
@@ -90,9 +91,8 @@ def run_all_experiments():
         for j in range(number_of_experiments):
             overlap_pct = experiment(stimulus_1, stimulus_2, random_neurons_percentage)
             results_for_specific_percentage.append(overlap_pct)
-            print("---")
-            print(f"overlap_percentages for exp no. {j} with {i} random neurons = {str(overlap_pct)} overlap")
-            print("---")
+            # print(f"overlap_percentages for exp no. {j} with {i} random neurons = {str(overlap_pct)} overlap")
+            # print("---")
 
         average_overlap_pct = sum(results_for_specific_percentage) / len(results_for_specific_percentage)
         overlap_percentages.append(average_overlap_pct)
