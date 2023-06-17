@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 input_neurons_size = 2500
-number_of_experiments = 50
+number_of_experiments = 100
 fixed_neurons_percentage = 0.05
 min_random_neurons_percentage = 0
 max_random_neurons_percentage = 95
@@ -72,11 +72,11 @@ def plot_chart():
                  xytext=(x_interp, 0.3),
                  arrowprops=dict(facecolor='black', arrowstyle='->'),
                  horizontalalignment='center',
-                 fontsize=14)
+                 fontsize=16)
 
-    plt.xlabel('Percentage of Random Neurons', fontsize=18)
-    plt.ylabel('Percentage of Overlap', fontsize=18)
-    plt.title('Percentage of Overlap Between 2 Odors by Percentage of Random Neurons',fontsize=20)
+    plt.xlabel('Percentage of Random Neurons', fontsize=20)
+    plt.ylabel('Percentage of Overlap', fontsize=20)
+    plt.title('Percentage of Overlap Between 2 Odors by Percentage of Random Neurons',fontsize=22)
     # plt.grid(True)
     plt.show()
 

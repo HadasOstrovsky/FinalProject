@@ -33,39 +33,31 @@ all_second_stage_learning_stimulus_1_without_inhibition = []
 all_second_stage_learning_stimulus_2_without_inhibition = []
 
 
-def calculate_weak_inhibition_effect(stimulus, inhibition_effect, index):
-    connected_neurons_indices = np.random.choice(input_neurons_size, size=inhibition_group_size, replace=False)
-    connected_neurons = stimulus[connected_neurons_indices]
+def calculate_weak_inhibition_effect(stimulus, inhibition_effect, index, all_active_indices):
+    connected_neurons_indices = np.random.choice(all_active_indices, size=inhibition_group_size, replace=False)
+    connected_neurons = np.square(stimulus[connected_neurons_indices])
     effect = np.sum(connected_neurons) / inhibition_group_size
     inhibition_effect[index] = effect
 
 
-def calculate_strong_inhibition_effect(stimulus, inhibition_effect, index, random_neurons_indices,
-                                       fixed_neurons_indices):
-    connected_neurons_indices = np.random.choice(input_neurons_size, size=inhibition_group_size, replace=False)
-
-    stimulus_copy = np.copy(stimulus)
-    stimulus_copy[random_neurons_indices] *= 1
-    stimulus_copy[fixed_neurons_indices] *= 0.5
-
-    connected_neurons = stimulus_copy[connected_neurons_indices]
-    effect = np.average(connected_neurons)
-    inhibition_effect[index] = effect
-
-
-def experiment_with_weak_inhibition(stimulus_1, stimulus_2, weights):
+def experiment_with_weak_inhibition(stimulus_1, stimulus_2, weights, stimulus_1_fixed_indices,
+                                    stimulus_2_fixed_indices):
     stimulus_1, stimulus_1_random_indices = fill_stimulus_with_random_neurons(stimulus_1)
     stimulus_1_random_indices_selected[stimulus_1_random_indices] += 1
 
     stimulus_2, stimulus_2_random_indices = fill_stimulus_with_random_neurons(stimulus_2)
     stimulus_2_random_indices_selected[stimulus_2_random_indices] += 1
 
+    all_active_indices_stimulus_1 = np.concatenate((stimulus_1_fixed_indices, stimulus_1_random_indices))
+    all_active_indices_stimulus_2 = np.concatenate((stimulus_2_fixed_indices, stimulus_2_random_indices))
+
     inhibition_effect_stimulus_1 = np.zeros(input_neurons_size)
     inhibition_effect_stimulus_2 = np.zeros(input_neurons_size)
 
-    for i in range(input_neurons_size):
-        calculate_weak_inhibition_effect(stimulus_1, inhibition_effect_stimulus_1, i)
-        calculate_weak_inhibition_effect(stimulus_2, inhibition_effect_stimulus_2, i)
+    for i in stimulus_1_random_indices:
+        calculate_weak_inhibition_effect(stimulus_1, inhibition_effect_stimulus_1, i, all_active_indices_stimulus_1)
+    for i in stimulus_2_random_indices:
+        calculate_weak_inhibition_effect(stimulus_2, inhibition_effect_stimulus_2, i, all_active_indices_stimulus_2)
 
     updated_weights_stimulus1 = weights - inhibition_effect_stimulus_1
     updated_weights_stimulus2 = weights - inhibition_effect_stimulus_2
@@ -84,7 +76,8 @@ def experiment_with_weak_inhibition(stimulus_1, stimulus_2, weights):
     fixed_neurons_indices_1 = np.where(stimulus_1 == 1)
     weights[fixed_neurons_indices_1] = 0.2
     random_neurons_indices_1 = np.where((stimulus_1 != 0) & (stimulus_1 != 1))
-    weights[random_neurons_indices_1] = stimulus_1[random_neurons_indices_1]
+    weights[random_neurons_indices_1] = np.ones(input_neurons_size)[random_neurons_indices_1] - stimulus_1[
+        random_neurons_indices_1]
 
     updated_weights_stimulus1 = weights - inhibition_effect_stimulus_1
     updated_weights_stimulus2 = weights - inhibition_effect_stimulus_2
@@ -97,56 +90,6 @@ def experiment_with_weak_inhibition(stimulus_1, stimulus_2, weights):
 
     all_second_stage_learning_stimulus_1_with_weak_inhibition.append(second_stage_learning_stimulus_1)
     all_second_stage_learning_stimulus_2_with_weak_inhibition.append(second_stage_learning_stimulus_2)
-
-
-def experiment_with_strong_inhibition(stimulus_1, stimulus_2, weights):
-    stimulus_1, stimulus_1_random_indices = fill_stimulus_with_random_neurons(stimulus_1)
-    stimulus_1_random_indices_selected[stimulus_1_random_indices] += 1
-    stimulus_1_fixed_indices = np.where(stimulus_1 == 1)
-
-    stimulus_2, stimulus_2_random_indices = fill_stimulus_with_random_neurons(stimulus_2)
-    stimulus_2_random_indices_selected[stimulus_2_random_indices] += 1
-    stimulus_2_fixed_indices = np.where(stimulus_2 == 1)
-
-    inhibition_effect_stimulus_1 = np.zeros(input_neurons_size)
-    inhibition_effect_stimulus_2 = np.zeros(input_neurons_size)
-
-    for i in range(input_neurons_size):
-        calculate_strong_inhibition_effect(stimulus_1, inhibition_effect_stimulus_1, i, stimulus_1_random_indices,
-                                           stimulus_1_fixed_indices)
-        calculate_strong_inhibition_effect(stimulus_2, inhibition_effect_stimulus_2, i, stimulus_2_random_indices,
-                                           stimulus_2_fixed_indices)
-
-    updated_weights_stimulus1 = weights - inhibition_effect_stimulus_1
-    updated_weights_stimulus2 = weights - inhibition_effect_stimulus_2
-
-    initial_learning_stimulus_1 = np.dot(stimulus_1, updated_weights_stimulus1)
-    initial_learning_stimulus_2 = np.dot(stimulus_2, updated_weights_stimulus2)
-
-    all_initial_learning_stimulus_1_with_strong_inhibition.append(initial_learning_stimulus_1)
-    all_initial_learning_stimulus_2_with_strong_inhibition.append(initial_learning_stimulus_2)
-
-    weights_all_zeros = np.zeros(input_neurons_size)
-    first_stage_learning_stimulus_1 = np.dot(stimulus_1, weights_all_zeros)
-    first_stage_learning_stimulus_2 = np.dot(stimulus_2, weights_all_zeros)
-
-    weights = np.ones(input_neurons_size)
-    fixed_neurons_indices_1 = np.where(stimulus_1 == 1)
-    weights[fixed_neurons_indices_1] = 0.2
-    random_neurons_indices_1 = np.where((stimulus_1 != 0) & (stimulus_1 != 1))
-    weights[random_neurons_indices_1] = stimulus_1[random_neurons_indices_1]
-
-    updated_weights_stimulus1 = weights - inhibition_effect_stimulus_1
-    updated_weights_stimulus2 = weights - inhibition_effect_stimulus_2
-
-    non_negative_weights_stimulus1 = np.where(updated_weights_stimulus1 < 0, 0, updated_weights_stimulus1)
-    non_negative_weights_stimulus2 = np.where(updated_weights_stimulus2 < 0, 0, updated_weights_stimulus2)
-
-    second_stage_learning_stimulus_1 = np.dot(stimulus_1, non_negative_weights_stimulus1)
-    second_stage_learning_stimulus_2 = np.dot(stimulus_2, non_negative_weights_stimulus2)
-
-    all_second_stage_learning_stimulus_1_with_strong_inhibition.append(second_stage_learning_stimulus_1)
-    all_second_stage_learning_stimulus_2_with_strong_inhibition.append(second_stage_learning_stimulus_2)
 
 
 def experiment_without_inhibition(stimulus_1, stimulus_2, weights):
@@ -190,7 +133,7 @@ def init_model():
 
     weights = np.ones(input_neurons_size)
 
-    return stimulus_1, stimulus_2, weights
+    return stimulus_1, stimulus_2, weights, stimulus_1_fixed_indices, stimulus_2_fixed_indices
 
 
 def create_stimulus_with_fixed_neurons():
@@ -388,44 +331,36 @@ def calc_std(list_of_items):
     return np.std(np.array(list_of_items))
 
 
-def plot_bars_chart_baseline_vs_weak_inhibition_vs_strong_inhibition_stimulus_1():
+def plot_bars_chart_weak_inhibition():
     average_all_initial_learning_stimulus_1_with_weak_inhibition = np.mean(
         all_initial_learning_stimulus_1_with_weak_inhibition)
-    average_all_initial_learning_stimulus_1_with_strong_inhibition = np.mean(
-        all_initial_learning_stimulus_1_with_strong_inhibition)
-    average_all_initial_learning_stimulus_1_without_inhibition = np.mean(
-        all_initial_learning_stimulus_1_without_inhibition)
+    average_all_initial_learning_stimulus_2_with_weak_inhibition = np.mean(
+        all_initial_learning_stimulus_2_with_weak_inhibition)
 
     average_second_stage_learning_stimulus_1_with_weak_inhibition = np.mean(
         all_second_stage_learning_stimulus_1_with_weak_inhibition)
-    average_second_stage_learning_stimulus_1_with_strong_inhibition = np.mean(
-        all_second_stage_learning_stimulus_1_with_strong_inhibition)
-    average_second_stage_learning_stimulus_1_without_inhibition = np.mean(
-        all_second_stage_learning_stimulus_1_without_inhibition)
+    average_second_stage_learning_stimulus_2_with_weak_inhibition = np.mean(
+        all_second_stage_learning_stimulus_2_with_weak_inhibition)
 
-    categories = ['With Connectivity', 'Without Connectivity']
+    categories = ['Odor 1', 'Odor 2']
     labels = ['Before Conditioning', 'After Conditioning']
 
     bar_width = 0.35  # Width of each bar
     index = np.arange(len(categories))  # Index for x-axis positions
 
     bars1 = [average_all_initial_learning_stimulus_1_with_weak_inhibition,
-             # average_all_initial_learning_stimulus_1_with_strong_inhibition,
-             average_all_initial_learning_stimulus_1_without_inhibition]
+             average_all_initial_learning_stimulus_2_with_weak_inhibition]
 
     bars2 = [average_second_stage_learning_stimulus_1_with_weak_inhibition,
-             # average_second_stage_learning_stimulus_1_with_strong_inhibition,
-             average_second_stage_learning_stimulus_1_without_inhibition]
+             average_second_stage_learning_stimulus_2_with_weak_inhibition]
 
-    print("odor 1: bars1 = ", bars1)
-    print("odor 1: bars2 = ", bars2)
+    print("with: bars1 = ", bars1)
+    print("with: bars2 = ", bars2)
 
     errors1 = [calc_std(all_initial_learning_stimulus_1_with_weak_inhibition),
-               # calc_std(all_initial_learning_stimulus_1_with_strong_inhibition),
-               calc_std(all_initial_learning_stimulus_1_without_inhibition)]
+               calc_std(all_initial_learning_stimulus_2_with_weak_inhibition)]
     errors2 = [calc_std(all_second_stage_learning_stimulus_1_with_weak_inhibition),
-               # calc_std(all_second_stage_learning_stimulus_1_with_strong_inhibition),
-               calc_std(all_second_stage_learning_stimulus_1_without_inhibition)]
+               calc_std(all_second_stage_learning_stimulus_2_with_weak_inhibition)]
 
     plt.bar(index, bars1, bar_width, label=labels[0])
     plt.bar(index + bar_width, bars2, bar_width, label=labels[1])
@@ -435,53 +370,45 @@ def plot_bars_chart_baseline_vs_weak_inhibition_vs_strong_inhibition_stimulus_1(
 
     # plt.xlabel('Categories')
     plt.ylabel('Activation Value', fontsize=18)
-    plt.title('The Effect of Connectivity on Activation of Odor 1', fontsize=20)
+    plt.title("The Effect of KC's Connectivity on Associative Learning", fontsize=20)
     plt.xticks(index + bar_width / 2, categories, fontsize=18)
-    plt.legend(fontsize=16)
+    plt.legend(fontsize=14)
 
     plt.show()
 
 
-def plot_bars_chart_baseline_vs_weak_inhibition_learning_stimulus_2():
-    average_all_initial_learning_stimulus_2_with_weak_inhibition = np.mean(
-        all_initial_learning_stimulus_2_with_weak_inhibition)
-    # average_all_initial_learning_stimulus_2_with_strong_inhibition = np.mean(
-    #     all_initial_learning_stimulus_2_with_strong_inhibition)
+def plot_bars_chart_without_inhibition():
+    average_all_initial_learning_stimulus_1_without_inhibition = np.mean(
+        all_initial_learning_stimulus_1_without_inhibition)
     average_all_initial_learning_stimulus_2_without_inhibition = np.mean(
         all_initial_learning_stimulus_2_without_inhibition)
 
-    average_second_stage_learning_stimulus_2_with_weak_inhibition = np.mean(
-        all_second_stage_learning_stimulus_2_with_weak_inhibition)
-    # average_second_stage_learning_stimulus_2_with_strong_inhibition = np.mean(
-    #     all_second_stage_learning_stimulus_2_with_strong_inhibition)
+    average_second_stage_learning_stimulus_1_without_inhibition = np.mean(
+        all_second_stage_learning_stimulus_1_without_inhibition)
     average_second_stage_learning_stimulus_2_without_inhibition = np.mean(
         all_second_stage_learning_stimulus_2_without_inhibition)
 
-    categories = ['With Connectivity', 'Without Connectivity']
+    categories = ['Odor 1', 'Odor 2']
     labels = ['Before Conditioning', 'After Conditioning']
 
     bar_width = 0.35  # Width of each bar
     index = np.arange(len(categories))  # Index for x-axis positions
 
-    bars1 = [average_all_initial_learning_stimulus_2_with_weak_inhibition,
-             # average_all_initial_learning_stimulus_2_with_strong_inhibition,
+    bars1 = [average_all_initial_learning_stimulus_1_without_inhibition,
              average_all_initial_learning_stimulus_2_without_inhibition]
 
-    bars2 = [average_second_stage_learning_stimulus_2_with_weak_inhibition,
-             # average_second_stage_learning_stimulus_2_with_strong_inhibition,
+    bars2 = [average_second_stage_learning_stimulus_1_without_inhibition,
              average_second_stage_learning_stimulus_2_without_inhibition]
 
-    errors1 = [calc_std(all_initial_learning_stimulus_2_with_weak_inhibition),
-               # calc_std(all_initial_learning_stimulus_2_with_strong_inhibition),
+    errors1 = [calc_std(all_initial_learning_stimulus_1_without_inhibition),
                calc_std(all_initial_learning_stimulus_2_without_inhibition)]
-    errors2 = [calc_std(all_second_stage_learning_stimulus_2_with_weak_inhibition),
-               # calc_std(all_second_stage_learning_stimulus_2_with_strong_inhibition),
+    errors2 = [calc_std(all_second_stage_learning_stimulus_1_without_inhibition),
                calc_std(all_second_stage_learning_stimulus_2_without_inhibition)]
 
     # print(errors1)
     # print(errors2)
-    print("odor 2: bars1 = ", bars1)
-    print("odor 2: bars2 = ", bars2)
+    print("without: bars1 = ", bars1)
+    print("without: bars2 = ", bars2)
 
     plt.bar(index, bars1, bar_width, label=labels[0])
     plt.bar(index + bar_width, bars2, bar_width, label=labels[1])
@@ -491,7 +418,7 @@ def plot_bars_chart_baseline_vs_weak_inhibition_learning_stimulus_2():
 
     # plt.xlabel('Categories')
     plt.ylabel('Activation Value', fontsize=18)
-    plt.title('The Effect of Connectivity on Activation of Odor 2', fontsize=20)
+    plt.title("The Effect of KC's Connectivity KN on Associative Learning", fontsize=20)
     plt.xticks(index + bar_width / 2, categories, fontsize=18)
     plt.legend(fontsize=16)
 
@@ -499,11 +426,12 @@ def plot_bars_chart_baseline_vs_weak_inhibition_learning_stimulus_2():
 
 
 def run_all_experiments():
-    stimulus_1, stimulus_2, weights = init_model()
+    stimulus_1, stimulus_2, weights, stimulus_1_fixed_indices, stimulus_2_fixed_indices = init_model()
 
     for i in range(number_of_experiments):
         print("experiment number " + str(i))
-        experiment_with_weak_inhibition(stimulus_1, stimulus_2, weights)
+        experiment_with_weak_inhibition(stimulus_1, stimulus_2, weights, stimulus_1_fixed_indices,
+                                        stimulus_2_fixed_indices)
         experiment_without_inhibition(stimulus_1, stimulus_2, weights)
         # experiment_with_strong_inhibition(stimulus_1, stimulus_2, weights)
 
@@ -517,8 +445,8 @@ def run_all_experiments():
     plot_xy_chart_without_inhibition()
     # plot_xy_chart_with_strong_inhibition()
     # plot_bars_chart_weak_inhibition_vs_without_inhibition()
-    plot_bars_chart_baseline_vs_weak_inhibition_vs_strong_inhibition_stimulus_1()
-    plot_bars_chart_baseline_vs_weak_inhibition_learning_stimulus_2()
+    plot_bars_chart_weak_inhibition()
+    plot_bars_chart_without_inhibition()
 
 
 run_all_experiments()
