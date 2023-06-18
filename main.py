@@ -35,7 +35,7 @@ all_second_stage_learning_stimulus_2_without_inhibition = []
 
 def calculate_weak_inhibition_effect(stimulus, inhibition_effect, index, all_active_indices):
     connected_neurons_indices = np.random.choice(all_active_indices, size=inhibition_group_size, replace=False)
-    connected_neurons = np.square(stimulus[connected_neurons_indices])
+    connected_neurons = stimulus[connected_neurons_indices]
     effect = np.sum(connected_neurons) / inhibition_group_size
     inhibition_effect[index] = effect
 
@@ -246,12 +246,12 @@ def plot_xy_chart_with_strong_inhibition():
                 linewidth=1)
     plt.yticks(list(plt.yticks()[0]) + [average_value_stimulus_2_final, 450])
 
-    plt.xlabel('Experiment Number')
-    plt.ylabel('Activation Value')
-    plt.title(f'Activation Value Over {number_of_experiments} Experiments')
 
-    plt.legend(loc='upper right')
-    plt.ylim(100, 450)
+    plt.xlabel('Experiment Number', fontsize=18)
+    plt.ylabel('Activation Value', fontsize=18)
+    plt.title(f'Activation Value Over {number_of_experiments} Experiments - With Connectivity', fontsize=24)
+
+    plt.legend(loc='upper right', fontsize=16)
 
     plt.show()
 
@@ -280,13 +280,13 @@ def plot_xy_chart_without_inhibition():
 
     yticks = [100, average_value_stimulus_1_initial, average_value_stimulus_1_final, average_value_stimulus_2_final,
               450]
-    plt.yticks(yticks)
+    plt.yticks(yticks, fontsize=16)
 
-    plt.xlabel('Experiment Number', fontsize=18)
-    plt.ylabel('Activation Value', fontsize=18)
-    plt.title(f'Activation Value Over {number_of_experiments} Experiments - Without Connectivity', fontsize=20)
+    plt.xlabel('Experiment Number', fontsize=20)
+    plt.ylabel('Activation Value', fontsize=20)
+    plt.title(f'Activation Value Over {number_of_experiments} Experiments - Without Connectivity', fontsize=24)
 
-    plt.legend(loc='upper right', fontsize=16)
+    plt.legend(loc='upper right', fontsize=18)
 
     plt.show()
 
@@ -423,6 +423,8 @@ def plot_bars_chart_without_inhibition():
     plt.legend(fontsize=16)
 
     plt.show()
+
+
 
 
 def run_all_experiments():
